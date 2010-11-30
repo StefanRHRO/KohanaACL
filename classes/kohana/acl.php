@@ -123,14 +123,21 @@ class Kohana_Acl {
      * @return void
      */
 	protected function _init($config) {
-		switch($config['adapter']) {
-			case 'orm':
-			default:
-				$model = ORM::factory('acl');
-				break;
-		}
-		$this->_aclTree = $model->asAclArray();
-        $this->_guestRole = $config['guestRole'];
+		$adapterClassName = 'Kohana_Acl_Adapter_';
+        if(!isset($config['adapter'])) {
+            $adapterClassName .= ucfirst('Array');
+        }
+        else {
+            $adapterClassName .= ucfirst($config['adapter']);
+        }
+
+        if(!class_exists($adapterClassName)) {
+            throw new Kohana_Exception(I18n::get('Diesen ACL Adapter gibt es leider nicht.'));
+        }
+
+        $adapter = new $adapterClassName($config);
+		$this->_aclTree = $adapter->getAclArray();
+        $this->_guestRole = $adapter->getGuestRole();
 	}
 	
 }
